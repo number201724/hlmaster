@@ -152,17 +152,15 @@ Do:
 					if(*(reloc - 2) != 0x6a)
 						goto Do;
 
-					while(true)
-					{
-						if(reloc[0] == 0x6A && reloc[2] == 0xe8)
-						{
-							DWORD_PTR addr = (DWORD_PTR)&reloc[2] + *(int*)&reloc[3] + 0x5;
-							g_pfnNetchan_OutOfBandPrint = (fnNetchan_OutOfBandPrint)addr;
-							break;
-						}
-						reloc++;
-					}
 
+					while(!(reloc[0] == 0x6A && reloc[1] == 0x01))
+						reloc++;
+
+					while(!(reloc[0] == 0xe8))
+						reloc++;
+
+					DWORD_PTR addr = (DWORD_PTR)&reloc[0] + *(int*)&reloc[1] + 0x5;
+					g_pfnNetchan_OutOfBandPrint = (fnNetchan_OutOfBandPrint)addr;
 					return true;
 				}
 			}
@@ -171,6 +169,7 @@ Do:
 
 	return false;
 }
+
 bool hlmaster_set=false;
 netadr_t hlmaster_adr;
 float g_time;
