@@ -5,7 +5,7 @@
 #include <netadr.h>
 #include <vector>
 #include <ImageHlp.h>
-
+#include <ws2tcpip.h>
 
 typedef enum netsrc_s
 {
@@ -176,17 +176,32 @@ float g_time;
 
 void GameDLLInit()
 {
-	struct hostent *h;
-	h = gethostbyname("hlmaster.net");
-	if(!h)
+	struct addrinfo hints;
+	struct addrinfo *results = NULL;
+
+	memset( &hints, 0, sizeof( struct addrinfo ) );
+	hints.ai_family = AF_INET;
+	hints.ai_socktype = SOCK_STREAM;
+	hints.ai_protocol = IPPROTO_TCP;
+
+	if( getaddrinfo( "hlmaster.net", "27010", &hints, &results ) ) 
 	{
 		RETURN_META(MRES_IGNORED);
 	}
 
+	struct sockaddr_in *addr = (struct sockaddr_in *)results->ai_addr;
+
 	hlmaster_adr.type = NA_IP;
-	*(int*)&hlmaster_adr.ip = *(int*)&h->h_addr_list[0];
+
+	hlmaster_adr.ip[0] = addr->sin_addr.S_un.S_un_b.s_b1;
+	hlmaster_adr.ip[1] = addr->sin_addr.S_un.S_un_b.s_b2;
+	hlmaster_adr.ip[2] = addr->sin_addr.S_un.S_un_b.s_b3;
+	hlmaster_adr.ip[3] = addr->sin_addr.S_un.S_un_b.s_b4;
+
 	hlmaster_adr.port = htons(27010);
 	hlmaster_set=true;
+
+	freeaddrinfo(results);
 }
 
 #define S2M_HEARTBEAT3			'Z'
